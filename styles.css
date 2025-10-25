@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@500;700&display=swap');
+
+body {
+  font-family: 'Cairo', sans-serif;
+  background: linear-gradient(135deg, #101820, #0c2233);
+  color: #fff;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  width: 95%;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+  width: 80px;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+header h1 {
+  font-size: 1.8em;
+  color: #00eaff;
+  margin-bottom: 10px;
+}
+
+.info {
+  font-size: 1.1em;
+  margin-bottom: 20px;
+}
+
+button, .store-btn, .test-btn {
+  display: inline-block;
+  background: #00eaff;
+  color: #000;
+  font-weight: bold;
+  padding: 12px 25px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1em;
+}
+
+button:hover, .store-btn:hover, .test-btn:hover {
+  background: #00bcd4;
+  transform: scale(1.05);
+}
+
+.hidden {
+  display: none;
+}
+
+#question-container {
+  font-size: 1.3em;
+  margin-bottom: 20px;
+}
+
+#answers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.answer-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 10px;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.answer-btn:hover {
+  background: #00eaff;
+  color: #000;
+}
+
+.answer-btn.correct {
+  border: 2px solid #16a34a;
+  background: rgba(22, 163, 74, 0.2);
+  color: #16a34a;
+}
+
+.answer-btn.wrong {
+  border: 2px solid #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+#timer {
+  font-size: 1.4em;
+  margin-top: 15px;
+  color: #ffcc00;
+}
+
+footer {
+  margin-top: 25px;
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+.social-links a {
+  color: #00eaff;
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+.social-links a:hover {
+  text-decoration: underline;
+}
+
+.test-btn {
+  background:#ff9800;
+  color:#000;
+  padding:10px 20px;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+/* ⚡️ Responsive for Mobile */
+@media (max-width: 480px) {
+  .container {
+    padding: 20px;
+  }
+  header h1 {
+    font-size: 1.5em;
+  }
+  #question-container {
+    font-size: 1.2em;
+  }
+  button, .store-btn, .test-btn {
+    padding: 10px 18px;
+    font-size: 1em;
+  }
+}
+
+
+
+#test-btn {
+  display: none;
+}
