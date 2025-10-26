@@ -1,4 +1,4 @@
-// quiz.js - نسخة نهائية مستقرة تدعم كل الأجهزة (بما فيها الموبايل)
+// quiz.js - نسخة ثابتة تعمل على كل الأجهزة + منع إعادة المحاولة بعد البدء
 
 ///// العناصر /////
 const startBtn = document.getElementById("start-btn");
@@ -12,8 +12,8 @@ const testBtn = document.getElementById("test-btn");
 const msgBox = document.getElementById("msg-box");
 
 ///// إعدادات المسابقة /////
-const PLAYED_KEY = "fifa_arab_played_single_v4";
-const STARTED_KEY = "fifa_arab_started_v4";
+const PLAYED_KEY = "fifa_arab_played_single_v3";
+const STARTED_KEY = "fifa_arab_started_single_v3";
 const PRIZE_AMOUNT = 200000;
 const CODE_PREFIX = "FA-";
 
@@ -29,10 +29,7 @@ let isTestMode = false;
 function showMsg(text) {
   msgBox.textContent = text;
   msgBox.classList.add("show");
-  msgBox.style.display = "block";
-  setTimeout(() => {
-    msgBox.style.display = "none";
-  }, 4000);
+  setTimeout(() => msgBox.classList.remove("show"), 3000);
 }
 
 function shuffleArray(arr) {
@@ -51,8 +48,7 @@ async function loadQuestions() {
     questions = shuffleArray(data).slice(0, 10);
     questions.forEach(q => q.options = shuffleArray(q.options));
     return true;
-  } catch (err) {
-    console.error(err);
+  } catch {
     showMsg("حدث خطأ أثناء تحميل الأسئلة.");
     return false;
   }
@@ -63,7 +59,6 @@ function showQuestion() {
   const q = questions[currentQuestion];
   questionContainer.textContent = `${currentQuestion + 1}. ${q.question}`;
   answersContainer.innerHTML = "";
-
   q.options.forEach(opt => {
     const btn = document.createElement("button");
     btn.className = "answer-btn";
@@ -71,7 +66,6 @@ function showQuestion() {
     btn.onclick = () => selectAnswer(btn, q.answer);
     answersContainer.appendChild(btn);
   });
-
   resetTimer();
   startTimer();
 }
@@ -92,7 +86,6 @@ function selectAnswer(btn, correct) {
 function startTimer() {
   timeLeft = 15;
   timerElement.textContent = timeLeft;
-  clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeLeft--;
     timerElement.textContent = timeLeft;
@@ -135,39 +128,31 @@ function finishQuiz() {
     `;
   }
 
-  // بعد انتهاء المسابقة: تسجيل اللعب لمرة واحدة فقط
   if (!isTestMode) {
     localStorage.setItem(PLAYED_KEY, "1");
+    localStorage.removeItem(STARTED_KEY);
   }
-
-  // نحذف مفتاح البداية لأنه خلصت المحاولة
-  localStorage.removeItem(STARTED_KEY);
 
   isTestMode = false;
 }
 
 ///// بدء المسابقة /////
 startBtn.addEventListener("click", async () => {
-  // منع اللعب إذا سبق وشارك المستخدم
-  if (!isTestMode && localStorage.getItem(PLAYED_KEY)) {
+  if (!isTestMode && (localStorage.getItem(PLAYED_KEY) || localStorage.getItem(STARTED_KEY))) {
     showMsg("لقد شاركت بالفعل في المسابقة! لا يمكنك اللعب مرة ثانية.");
-    return;
-  }
-
-  // منع اللعب إذا بدأ بالفعل وخرج قبل النهاية
-  if (!isTestMode && localStorage.getItem(STARTED_KEY)) {
-    showMsg("لقد بدأت المسابقة مسبقًا ولا يمكنك إعادة المحاولة.");
     return;
   }
 
   const loaded = await loadQuestions();
   if (!loaded) return;
 
-  // تسجيل أنه بدأ اللعبة فعليًا
+  // تحديد أن المستخدم بدأ اللعبة
   if (!isTestMode) {
     localStorage.setItem(STARTED_KEY, "1");
   }
 
+  currentQuestion = 0;
+  score = 0;
   startBox.classList.add("hidden");
   resultBox.classList.add("hidden");
   quizBox.classList.remove("hidden");
@@ -175,18 +160,24 @@ startBtn.addEventListener("click", async () => {
 });
 
 ///// زر التجربة /////
-testBtn.addEventListener("click", () => {
+testBtn.addEventListener("click", async () => {
   isTestMode = true;
-  showMsg("تم تفعيل وضع التجربة. يمكنك الضغط على 'ابدأ التحدي' لتجربة اللعبة.");
+  const loaded = await loadQuestions();
+  if (!loaded) return;
+
+  currentQuestion = 0;
+  score = 0;
+  startBox.classList.add("hidden");
+  resultBox.classList.add("hidden");
+  quizBox.classList.remove("hidden");
+
+  showQuestion();
 });
 
-///// عند تحميل الصفحة /////
+///// منع إعادة المحاولة بعد التحديث /////
 window.addEventListener("load", () => {
-  // لو المستخدم خلص أو بدأ فعلاً يمنع فقط وضع اللعب العادي
   if (localStorage.getItem(PLAYED_KEY) || localStorage.getItem(STARTED_KEY)) {
-    if (!isTestMode) {
-      startBtn.disabled = false; // نسمح بالضغط لكن نعالج المنع من الداخل
-      testBtn.hidden = false;
-    }
+    startBtn.disabled = true;
+    showMsg("لقد شاركت بالفعل في المسابقة 🔒");
   }
 });
