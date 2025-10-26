@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>مسابقة فيفا عرب </title>
   <link rel="stylesheet" href="styles.css" />
-</script>
-<link rel="icon" type="image/png" href="./logo.png">
-
-
-
+  <link rel="icon" type="image/png" href="./logo.png">
 </head>
 
 <body>
@@ -19,22 +15,18 @@
       <h1>مسابقة متجر فيفا عرب ⚽️</h1>
     </header>
 
-    <!-- المسابقة الأولى -->
+    <!-- المسابقة -->
     <div id="quiz-box" class="hidden">
       <div id="question-container"></div>
       <div id="answers-container"></div>
       <div id="timer">15</div>
     </div>
 
-    <!-- شاشة الانتقال بين المسابقات -->
-    <div id="interlude-box" class="hidden">
-      <h2>روق يا بطل! 😎</h2>
-      <p>استعد للمسابقة القادمة مع متجر فيفا عرب، الجوائز في انتظارك!</p>
-      <button id="continue-btn">تابع 🔹</button>
-    </div>
-
     <!-- بداية المسابقة -->
     <div id="start-box">
+      <!-- هنا صندوق الرسائل يظهر بدل الـ alert -->
+      <div id="msg-box" class="hidden"></div>
+
       <div id="intro-text" class="intro-text">
         <p> عندك 15 ثانية لكل سؤال 🕒</p>
         <p> استعد قبل البدء لك محاوله واحده فقط</p>
@@ -42,15 +34,19 @@
       </div>
 
       <p class="info">
-        استعد وبيّن مدى معرفتك بعالم كرة القدم 💪 </p>
+        استعد وبيّن مدى معرفتك بعالم كرة القدم 💪
+      </p>
       <p class="info">
-        الذي يجيب عن الأسئلة العشر  جميعها هو بطل التحدّي الحقيقي 🏅 </p>
+        الذي يجيب عن الأسئلة العشر جميعها هو بطل التحدّي الحقيقي 🏅
+      </p>
       <button id="start-btn">ابدأ التحدي 🔥</button>
     </div>
-     <!-- زر تجربة المسابقة -->
-      <button  id="test-btn" class="test-btn" hidden>
-           test 
-      </button>
+
+    <!-- زر تجربة المسابقة -->
+    <!-- مخفي افتراضياً، تقدر تتحكم في ظهوره من styles.css -->
+    <button id="test-btn" class="test-btn" hidden>
+      تجربة المسابقة
+    </button>
 
     <div id="result-box" class="hidden"></div>
 
@@ -68,4 +64,3 @@
   <script src="quiz.js"></script>
 </body>
 </html>
-
