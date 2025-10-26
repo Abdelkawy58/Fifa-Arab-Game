@@ -1,4 +1,12 @@
-// عناصر الصفحة
+/* quiz.js - نهائي
+   - رسالة داخلية بدل alert
+   - زر "تجربة" يفتح محاولة عرضية فقط (trial) ولا يسجل PLAYED_KEY
+   - زر "ابدأ التحدي" يبدأ اللعب الحقيقي ويسجل PLAYED_KEY بعد النهاية
+   - انتهاء الوقت لأي سؤال => تنتهي المسابقة فورًا
+   - تحميل الأسئلة من questions.json (يدعم array أو { questions: [...] })
+*/
+
+//// عناصر الواجهة ////
 const startBtn = document.getElementById("start-btn");
 const quizBox = document.getElementById("quiz-box");
 const questionContainer = document.getElementById("question-container");
@@ -6,56 +14,128 @@ const answersContainer = document.getElementById("answers-container");
 const timerElement = document.getElementById("timer");
 const resultBox = document.getElementById("result-box");
 const startBox = document.getElementById("start-box");
-const interludeBox = document.getElementById("interlude-box");
 const testBtn = document.getElementById("test-btn");
 
-const HAS_PLAYED_KEY1 = "fifa_arab_played_1";
-const HAS_PLAYED_KEY2 = "fifa_arab_played_2";
+//// إعدادات ////
+const PLAYED_KEY = "fifa_arab_played_single_v1";
+const PLAYER_ID_KEY = "fifa_player_id";
+const PRIZE_AMOUNT = 200000;
+const CODE_PREFIX = "FA-";
 
-// أسئلة المسابقات
-const quiz1Questions = [
-  { question: "من هو أكثر لاعب شارك في مباريات في تاريخ دوري أبطال أوروبا؟", options: ["ميسي", "رونالدو", "راموس", "بويول"], answer: "رونالدو" },
-  { question: "ما النادي الأوروبي الذي لم يخسر أي مباراة على أرضه في دوري الأبطال لمدة 10 سنوات متتالية؟", options: ["ريال مدريد", "تشيلسي", "ليفربول", "بايرن ميونخ"], answer: "تشيلسي" },
-  { question: "كم مرة فازت إيطاليا بكأس العالم؟", options: ["2", "3", "4", "5"], answer: "4" },
-  { question: "كم دوري يمتلك نادي أرسنال؟", options: ["11", "12", "13", "14"], answer: "13" },
-  { question: "من اللاعب الفائز بالكورة الذهبية عام 1968؟", options: ["جورج بست", "بوبي تشارلتون", "يوهان كرويف", "فلوريان ألبرت"], answer: "جورج بست" },
-  { question: "في أي عام هبط نادي يوفنتوس للمرة الأولى في تاريخه؟", options: ["2002-2003", "2004-2005", "2006-2007", "2008-2009"], answer: "2006-2007" },
-  { question: "من أي نادي انتقل اللاعب فالفيردي إلى ريال مدريد؟", options: ["بينارول", "ريال أوفييدو", "ليجانيس", "إيبار"], answer: "بينارول" },
-  { question: "من هو أصغر لاعب سجل هدف في كأس العالم؟", options: ["امبابي", "انسو فاتي", "بيليه", "أوزيبيو"], answer: "بيليه" },
-  { question: "الجنسية الثانية التي يمتلكها امبابي؟", options: ["كاميرون", "سنغال", "نيجيريا", "الرأس الأخضر"], answer: "كاميرون" },
-  { question: "مركز ليفربول حاليا في الدوري الإنجليزي؟", options: ["2", "3", "4", "5"], answer: "4" }
-];
-
-const quiz2Questions = [
-  { question: "كم مرة فاز رونالدو الظاهرة بالكرة الذهبية؟", options: ["1", "2", "3", "4"], answer: "2" },
-  { question: "المدرب الذي قاد ريال مدريد لثلاثية دوري الأبطال المتتالية؟", options: ["زيدان", "انشيلوتي", "بيليغريني", "مورينيو"], answer: "زيدان" },
-  { question: "من هو آخر بطل للدوري الإيطالي؟", options: ["انتر ميلان", "اسي ميلان", "نابولي", "يوفنتوس"], answer: "نابولي" },
-  { question: "المركز السادس في الدوري السعودي حاليا؟", options: ["نيوم", "الخلود", "الخليج", "الاتحاد"], answer: "الخليج" }
-];
-
-let currentQuiz = 1;
+//// حالة ////
+let questions = [];
+let questionsLoaded = false;
 let currentQuestion = 0;
 let score = 0;
 let timeLeft = 15;
-let timerInterval;
+let timerInterval = null;
+let isTrial = false; // true لو فتحنا عبر زر "تجربة" (لا يسجّل المشاركة)
 
-// توليد كود الفوز
-function generateWinnerCode(type) {
-  const prefix = type === "P" ? "FA-P-" : "FA-S-";
-  return prefix + Math.floor(10000 + Math.random() * 90000);
+//// دالة إظهار رسالة داخل الصفحة بدل alert ////
+function showMessage(type, text, persist = false) {
+  // type: "error" | "info" | "success"
+  const existing = document.querySelector(".msg-box");
+  if (existing) existing.remove();
+
+  const msgBox = document.createElement("div");
+  msgBox.className = "msg-box";
+  // ستايل سريع مضمّن حتى يشتغل من غير تعديل CSS خارجي
+  msgBox.style.position = "fixed";
+  msgBox.style.top = "20px";
+  msgBox.style.left = "50%";
+  msgBox.style.transform = "translateX(-50%)";
+  msgBox.style.zIndex = 9999;
+  msgBox.style.padding = "12px 16px";
+  msgBox.style.borderRadius = "10px";
+  msgBox.style.boxShadow = "0 6px 18px rgba(0,0,0,0.25)";
+  msgBox.style.fontFamily = "Cairo, sans-serif";
+  msgBox.style.fontSize = "15px";
+  msgBox.style.color = "#071017";
+  msgBox.style.maxWidth = "90%";
+  msgBox.style.textAlign = "center";
+
+  if (type === "error") {
+    msgBox.style.background = "#ffdddd";
+    msgBox.style.border = "1px solid #ff9b9b";
+  } else if (type === "success") {
+    msgBox.style.background = "#ddffdd";
+    msgBox.style.border = "1px solid #9bff9b";
+  } else {
+    msgBox.style.background = "#e6f7ff";
+    msgBox.style.border = "1px solid #bfefff";
+  }
+
+  msgBox.textContent = text;
+  document.body.appendChild(msgBox);
+
+  if (!persist) {
+    setTimeout(() => {
+      msgBox.style.transition = "opacity 300ms";
+      msgBox.style.opacity = "0";
+      setTimeout(() => msgBox.remove(), 320);
+    }, 4500);
+  }
 }
 
-// عرض السؤال
+//// توليد معرف لاعب ////
+function ensurePlayerId() {
+  let pid = localStorage.getItem(PLAYER_ID_KEY);
+  if (!pid) {
+    pid = "p-" + Math.random().toString(36).slice(2, 12);
+    try { localStorage.setItem(PLAYER_ID_KEY, pid); } catch (e) {}
+  }
+  return pid;
+}
+
+//// توليد كود الفوز ////
+function generateWinnerCode() {
+  return CODE_PREFIX + Math.floor(10000 + Math.random() * 90000);
+}
+
+//// تحميل الأسئلة (يدعم array أو { questions: [...] }) ////
+async function loadQuestions() {
+  questionsLoaded = false;
+  try {
+    const res = await fetch("questions.json", { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      questions = data;
+    } else if (data && Array.isArray(data.questions)) {
+      questions = data.questions;
+    } else {
+      throw new Error("الشكل غير صحيح لملف الأسئلة");
+    }
+    if (questions.length === 0) throw new Error("قائمة الأسئلة فارغة");
+    questionsLoaded = true;
+  } catch (err) {
+    console.error("خطأ تحميل الأسئلة:", err);
+    // عرض رسالة داخل الواجهة (بدل alert) — بدون زر إعادة محاولة
+    showMessage("error", "نعتذر! حدث خطأ أثناء تحميل الأسئلة. حاول لاحقًا.", true);
+  }
+}
+
+//// عرض السؤال ////
 function showQuestion() {
-  const q = currentQuiz === 1 ? quiz1Questions[currentQuestion] : quiz2Questions[currentQuestion];
-  questionContainer.textContent = q.question;
+  if (!questionsLoaded || !questions || questions.length === 0) {
+    showMessage("error", "نعتذر! الأسئلة غير متاحة الآن.", true);
+    return;
+  }
+
+  const q = questions[currentQuestion];
+  questionContainer.textContent = `${currentQuestion + 1}. ${q.question}`;
   answersContainer.innerHTML = "";
 
-  q.options.forEach(opt => {
+  q.options.forEach((opt) => {
     const btn = document.createElement("button");
     btn.className = "answer-btn";
     btn.textContent = opt;
-    btn.onclick = () => selectAnswer(btn, q.answer);
+    btn.style.cursor = "pointer";
+    btn.addEventListener("click", () => {
+      // تعطيل الأزرار فور النقر لمنع تكرار الضغط
+      answersContainer.querySelectorAll(".answer-btn").forEach(b => b.disabled = true);
+      selectAnswer(btn, q.answer);
+    });
     answersContainer.appendChild(btn);
   });
 
@@ -63,126 +143,126 @@ function showQuestion() {
   startTimer();
 }
 
-// اختيار الإجابة
+//// اختيار الإجابة ////
 function selectAnswer(btn, correct) {
   clearInterval(timerInterval);
   if (btn.textContent === correct) score++;
-  nextQuestionOrFinish();
-}
 
-// الانتقال للسؤال التالي أو إنهاء المسابقة
-function nextQuestionOrFinish() {
-  currentQuestion++;
-  const questions = currentQuiz === 1 ? quiz1Questions : quiz2Questions;
-  if (currentQuestion < questions.length) {
-    showQuestion();
+  if (currentQuestion < questions.length - 1) {
+    currentQuestion++;
+    setTimeout(showQuestion, 300);
   } else {
-    finishQuiz();
+    setTimeout(finishQuiz, 300);
   }
 }
 
-// المؤقت
+//// المؤقت: انتهاء الوقت => نهاية المسابقة فورًا ////
 function startTimer() {
   timeLeft = 15;
   timerElement.textContent = timeLeft;
+  clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeLeft--;
     timerElement.textContent = timeLeft;
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
-      // انتهاء الوقت بدون إجابة → تنتهي المسابقة فورًا
+      // انتهاء الوقت بدون إجابة => نهاية المسابقة
       finishQuiz();
     }
   }, 1000);
 }
-
 function resetTimer() {
   clearInterval(timerInterval);
   timeLeft = 15;
   timerElement.textContent = timeLeft;
 }
 
-// نهاية المسابقة
+//// نهاية المسابقة ////
 function finishQuiz() {
   clearInterval(timerInterval);
   quizBox.classList.add("hidden");
-  resultBox.classList.add("hidden");
-  const questions = currentQuiz === 1 ? quiz1Questions : quiz2Questions;
-  const playedKey = currentQuiz === 1 ? HAS_PLAYED_KEY1 : HAS_PLAYED_KEY2;
+  resultBox.classList.remove("hidden");
 
-  if (score === questions.length) {
-    // فوز كامل
-    const code = generateWinnerCode(currentQuiz === 1 ? "P" : "S");
-    resultBox.classList.remove("hidden");
+  const total = questions.length;
+  ensurePlayerId();
+
+  if (score === total) {
+    // فاز
+    const code = generateWinnerCode();
     resultBox.innerHTML = `
       <h2>🎉 مبروك الفوز يا بطل!</h2>
       <p>جاوبت صح على كل الأسئلة 👑</p>
+      <p>الجائزة: ${PRIZE_AMOUNT.toLocaleString("en-US")} كوينز</p>
       <p>كود الفوز الخاص بك:</p>
       <div style="color:#FFD700;font-size:20px;font-weight:bold;margin-top:5px">${code}</div>
-      <p>1️⃣ احتفظ بالكود لتسليم جائزتك(سكرين شوت)</p>
-      <p>2️⃣ تأكد من متابعة حسابات المتجر على تويتر وانستجرام و قناه الواتساب.</p>
+      <p>1️⃣ احتفظ بالكود لتسليم جائزتك (سكرين شوت)</p>
+      <p>2️⃣ تابع حسابات المتجر على تويتر وإنستجرام وقناة الواتساب.</p>
       <p>3️⃣ ادخل على رابط المتجر وسجل بياناتك.👇</p>
-       <a href="https://fifa-arab.com" target="_blank" class="store-btn">🏪 الدخول للمتجر</a>
+      <a href="https://fifa-arab.com" target="_blank" class="store-btn">🏪 الدخول للمتجر</a>
     `;
-    localStorage.setItem(playedKey, "1");
   } else {
-    if (currentQuiz === 1) {
-      // خسر المسابقة الأولى → عرض interlude للمسابقة الثانية
-      interludeBox.classList.remove("hidden");
-      interludeBox.innerHTML = ` <h2> وقت المسابقة انتهي </h2>
-        <h2>روق يا بطل! 😎</h2>
-        <p>جاوبت ${score} من ${questions.length} إجابات صح.</p>
-        <p>مع متجر فيفا عرب دايمًا كسبان 💪</p>
-        <p>الحين عندك فرصة ثانية للمشاركة في المسابقة التالية:</p>
-        <p>عدد الأسئلة: 4 | الجائزة: 50 ألف كوينز 💰</p>
-        <button id="continue-btn">ابدأ الأن 🔹</button>
-      `;
-      const newContinueBtn = document.getElementById("continue-btn");
-      newContinueBtn.addEventListener("click", () => {
-        interludeBox.classList.add("hidden");
-        currentQuiz = 2;
-        currentQuestion = 0;
-        score = 0;
-        quizBox.classList.remove("hidden");
-        showQuestion();
-      });
-      localStorage.setItem(playedKey, "1");
-    } else {
-      // المسابقة الثانية → النتيجة النهائية
-      resultBox.classList.remove("hidden");
-      resultBox.innerHTML = ` <h2> وقت المسابقة انتهي </h2>
-                              <h2>حظ أوفر المرة القادمة😅</h2>
-                             <h2>عروض و مسابقات دايما في متجرنا</h2>
-                             <p>أجبت ${score} من ${questions.length} إجابات صحيحة.</p>`;
-      localStorage.setItem(playedKey, "1");
-    }
+    resultBox.innerHTML = `
+      <h2>حظ أوفر المرة القادمة</h2>
+      <h2>روق يا بطل! 😎</h2>
+      <p>أجبت ${score} من ${total} إجابات صحيحة.</p>
+      <p>مع متجر فيفا عرب دايمًا كسبان انتظر المسابقة القادمة 💪</p>
+    `;
   }
+
+  // فقط في حالة اللعب الحقيقي نسجل أن اللاعب شارك (localStorage)
+  if (!isTrial) {
+    try { localStorage.setItem(PLAYED_KEY, "1"); }
+    catch (e) { console.warn("تعذر حفظ حالة اللعب:", e); }
+  } else {
+    // كانت تجربة عرضية → لا نسجل PLAYED_KEY
+    showMessage("info", "كانت هذه محاولة تجريبية — اضغط 'ابدأ التحدي' للعب الحقيقي.");
+  }
+  // إعادة الحالة الافتراضية للتجربة
+  isTrial = false;
 }
 
-// بدء المسابقة
+//// بدء المسابقة الحقيقية ////
 startBtn.addEventListener("click", () => {
-  if (localStorage.getItem(HAS_PLAYED_KEY1)) {
-    alert("لقد شاركت بالفعل في المسابقة! لا يمكن اللعب مرة ثانية.");
+  // لو سبق للمستخدم اللعب بالفعل على هذا المتصفح
+  if (localStorage.getItem(PLAYED_KEY)) {
+    showMessage("error", "لقد شاركت بالفعل في المسابقة! لا يمكن اللعب مرة ثانية.", true);
     return;
   }
-  currentQuiz = 1;
+
+  // تأكد أن الأسئلة محملة
+  if (!questionsLoaded || !questions || questions.length === 0) {
+    showMessage("error", "نعتذر! لم يتم تحميل الأسئلة بنجاح. حاول لاحقًا.", true);
+    return;
+  }
+
+  // إذا كان المستخدم حاليًا في وضع تجربة، نوقف المحاكاة ونبدأ حقيقي جديد
+  isTrial = false;
   currentQuestion = 0;
   score = 0;
   startBox.classList.add("hidden");
+  resultBox.classList.add("hidden");
   quizBox.classList.remove("hidden");
   showQuestion();
 });
 
+//// زر تجربة — يفتح محاولة عرضية فقط (لا يضع PLAYED_KEY) ////
+if (testBtn) {
+  testBtn.addEventListener("click", () => {
+    // جرب بدون تسجيل المشاركة الحقيقية
+    isTrial = true;
+    currentQuestion = 0;
+    score = 0;
+    // لا نخفي startBox حتى تقدر تضغط Start بعد التجربة لو حبيت
+    resultBox.classList.add("hidden");
+    quizBox.classList.remove("hidden");
+    showQuestion();
+    showMessage("info", "هذا وضع تجريبي — اضغط 'ابدأ التحدي' لبدء اللعب الحقيقي.", false);
+  });
+}
 
-
-// زر تجربة المسابقة (يتجاهل localStorage)
-testBtn.addEventListener("click", () => {
-  startBox.classList.add("hidden");
-  interludeBox.classList.add("hidden");
-  quizBox.classList.remove("hidden");
-  currentQuiz = 1;
-  currentQuestion = 0;
-  score = 0;
-  showQuestion();
-}); 
-
+//// تحميل الأسئلة عند فتح الصفحة ////
+document.addEventListener("DOMContentLoaded", () => {
+  resultBox.classList.add("hidden");
+  // نحمّل الأسئلة لكن لا نعرض تنبيه لو فشل هنا — التنبيه سيظهر عند محاولات البدء
+  loadQuestions();
+});
