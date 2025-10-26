@@ -144,6 +144,7 @@ function finishQuiz() {
   }
 
   isTestMode = false;
+  testBtn.hidden = false; // بعد النتيجة، لما يرجع المستخدم للصفحة، الزر يظهر تاني
 }
 
 ///// بدء المسابقة /////
@@ -161,22 +162,19 @@ startBtn.addEventListener("click", async () => {
   startBox.classList.add("hidden");
   resultBox.classList.add("hidden");
   quizBox.classList.remove("hidden");
-  testBtn.hidden = true;
+  testBtn.hidden = true; // إخفاء زر التجربة أثناء المسابقة
 
   showQuestion();
 });
 
 ///// زر التجربة /////
-// تعديل هنا فقط:
 testBtn.addEventListener("click", () => {
   isTestMode = true;
   showMsg("تم فتح وضع التجربة، يمكنك الآن الضغط على 'ابدأ التحدي' لتجربة المسابقة.", "success");
 });
 
-// منع إعادة اللعب بعد التحديث
+///// عند تحميل الصفحة /////
 document.addEventListener("DOMContentLoaded", () => {
-  if (localStorage.getItem(PLAYED_KEY)) {
-    console.log("المستخدم أنهى المسابقة مسبقًا");
-  }
   resultBox.classList.add("hidden");
+  testBtn.hidden = false; // يظهر فقط في الصفحة الرئيسية
 });
