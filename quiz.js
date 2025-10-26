@@ -136,6 +136,7 @@ function finishQuiz() {
 
 ///// البدء /////
 startBtn.addEventListener("click", async () => {
+  // 🔹 أولاً تحقق لو المستخدم لعب فعلاً قبل كده (في الوضع العادي فقط)
   if (!isTestMode && localStorage.getItem(PLAYED_KEY)) {
     showMsg("لقد شاركت بالفعل في المسابقة! لا يمكنك اللعب مرة ثانية.", "error");
     return;
@@ -144,20 +145,22 @@ startBtn.addEventListener("click", async () => {
   const loaded = await loadQuestions();
   if (!loaded) return;
 
-  // ✅ حفظ حالة المشاركة مباشرة بعد بدء المسابقة
-  if (!isTestMode) {
-    localStorage.setItem(PLAYED_KEY, "1");
-  }
-
   currentQuestion = 0;
   score = 0;
+
   startBox.classList.add("hidden");
   resultBox.classList.add("hidden");
   quizBox.classList.remove("hidden");
   testBtn.hidden = true; // إخفاء زر التجربة أثناء المسابقة
 
+  // ✅ هنا فقط نسجل إن المستخدم بدأ التحدي فعلاً (بعد تحميل الأسئلة وبدء اللعبة)
+  if (!isTestMode) {
+    localStorage.setItem(PLAYED_KEY, "1");
+  }
+
   showQuestion();
 });
+
 
 
 ///// زر التجربة /////
