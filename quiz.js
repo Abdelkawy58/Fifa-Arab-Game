@@ -1,4 +1,4 @@
-// quiz.js - نسخة ثابتة تدعم كل الأجهزة (بما فيها الموبايل)
+// quiz.js - نسخة نهائية مستقرة تدعم كل الأجهزة (بما فيها الموبايل)
 
 ///// العناصر /////
 const startBtn = document.getElementById("start-btn");
@@ -12,8 +12,8 @@ const testBtn = document.getElementById("test-btn");
 const msgBox = document.getElementById("msg-box");
 
 ///// إعدادات المسابقة /////
-const PLAYED_KEY = "fifa_arab_played_single_v3";
-const STARTED_KEY = "fifa_arab_started_v3";
+const PLAYED_KEY = "fifa_arab_played_single_v4";
+const STARTED_KEY = "fifa_arab_started_v4";
 const PRIZE_AMOUNT = 200000;
 const CODE_PREFIX = "FA-";
 
@@ -29,7 +29,10 @@ let isTestMode = false;
 function showMsg(text) {
   msgBox.textContent = text;
   msgBox.classList.add("show");
-  setTimeout(() => msgBox.classList.remove("show"), 3000);
+  msgBox.style.display = "block";
+  setTimeout(() => {
+    msgBox.style.display = "none";
+  }, 4000);
 }
 
 function shuffleArray(arr) {
@@ -48,7 +51,8 @@ async function loadQuestions() {
     questions = shuffleArray(data).slice(0, 10);
     questions.forEach(q => q.options = shuffleArray(q.options));
     return true;
-  } catch {
+  } catch (err) {
+    console.error(err);
     showMsg("حدث خطأ أثناء تحميل الأسئلة.");
     return false;
   }
@@ -59,6 +63,7 @@ function showQuestion() {
   const q = questions[currentQuestion];
   questionContainer.textContent = `${currentQuestion + 1}. ${q.question}`;
   answersContainer.innerHTML = "";
+
   q.options.forEach(opt => {
     const btn = document.createElement("button");
     btn.className = "answer-btn";
@@ -66,6 +71,7 @@ function showQuestion() {
     btn.onclick = () => selectAnswer(btn, q.answer);
     answersContainer.appendChild(btn);
   });
+
   resetTimer();
   startTimer();
 }
@@ -86,6 +92,7 @@ function selectAnswer(btn, correct) {
 function startTimer() {
   timeLeft = 15;
   timerElement.textContent = timeLeft;
+  clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeLeft--;
     timerElement.textContent = timeLeft;
@@ -128,25 +135,26 @@ function finishQuiz() {
     `;
   }
 
+  // بعد انتهاء المسابقة: تسجيل اللعب لمرة واحدة فقط
   if (!isTestMode) {
     localStorage.setItem(PLAYED_KEY, "1");
   }
 
-  // بعد انتهاء اللعبة نحذف مفتاح البداية
+  // نحذف مفتاح البداية لأنه خلصت المحاولة
   localStorage.removeItem(STARTED_KEY);
 
   isTestMode = false;
 }
 
-///// بدء التحدي /////
+///// بدء المسابقة /////
 startBtn.addEventListener("click", async () => {
-  // لو لعب قبل كده ممنوع
+  // منع اللعب إذا سبق وشارك المستخدم
   if (!isTestMode && localStorage.getItem(PLAYED_KEY)) {
     showMsg("لقد شاركت بالفعل في المسابقة! لا يمكنك اللعب مرة ثانية.");
     return;
   }
 
-  // لو بدأ اللعبة قبل كده ولسه في النص (عمل ريفريش)
+  // منع اللعب إذا بدأ بالفعل وخرج قبل النهاية
   if (!isTestMode && localStorage.getItem(STARTED_KEY)) {
     showMsg("لقد بدأت المسابقة مسبقًا ولا يمكنك إعادة المحاولة.");
     return;
@@ -155,12 +163,13 @@ startBtn.addEventListener("click", async () => {
   const loaded = await loadQuestions();
   if (!loaded) return;
 
-  // بمجرد ما يبدأ التحدي نحفظ أنه بدأ فعلاً
+  // تسجيل أنه بدأ اللعبة فعليًا
   if (!isTestMode) {
     localStorage.setItem(STARTED_KEY, "1");
   }
 
   startBox.classList.add("hidden");
+  resultBox.classList.add("hidden");
   quizBox.classList.remove("hidden");
   showQuestion();
 });
@@ -168,17 +177,16 @@ startBtn.addEventListener("click", async () => {
 ///// زر التجربة /////
 testBtn.addEventListener("click", () => {
   isTestMode = true;
-  showMsg("تم فتح وضع التجربة، اضغط على 'ابدأ التحدي' لتجربة المسابقة.");
+  showMsg("تم تفعيل وضع التجربة. يمكنك الضغط على 'ابدأ التحدي' لتجربة اللعبة.");
 });
 
 ///// عند تحميل الصفحة /////
 window.addEventListener("load", () => {
-  // لو المسابقة خلصت أو اتبدأت بالفعل → يمنع الدخول
+  // لو المستخدم خلص أو بدأ فعلاً يمنع فقط وضع اللعب العادي
   if (localStorage.getItem(PLAYED_KEY) || localStorage.getItem(STARTED_KEY)) {
     if (!isTestMode) {
-      startBtn.disabled = true;
-      testBtn.disabled = false;
-      showMsg("لقد شاركت بالفعل في المسابقة 🔒");
+      startBtn.disabled = false; // نسمح بالضغط لكن نعالج المنع من الداخل
+      testBtn.hidden = false;
     }
   }
 });
