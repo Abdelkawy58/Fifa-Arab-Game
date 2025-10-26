@@ -137,18 +137,28 @@ function finishQuiz() {
 ///// البدء /////
 startBtn.addEventListener("click", async () => {
   if (!isTestMode && localStorage.getItem(PLAYED_KEY)) {
-    showMsg("لقد شاركت بالفعل في المسابقة! لا يمكنك اللعب مرة ثانية.");
+    showMsg("لقد شاركت بالفعل في المسابقة! لا يمكنك اللعب مرة ثانية.", "error");
     return;
   }
 
   const loaded = await loadQuestions();
   if (!loaded) return;
 
-  localStorage.setItem("quizStarted", "true");
+  // ✅ حفظ حالة المشاركة مباشرة بعد بدء المسابقة
+  if (!isTestMode) {
+    localStorage.setItem(PLAYED_KEY, "1");
+  }
+
+  currentQuestion = 0;
+  score = 0;
   startBox.classList.add("hidden");
+  resultBox.classList.add("hidden");
   quizBox.classList.remove("hidden");
+  testBtn.hidden = true; // إخفاء زر التجربة أثناء المسابقة
+
   showQuestion();
 });
+
 
 ///// زر التجربة /////
 testBtn.addEventListener("click", () => {
