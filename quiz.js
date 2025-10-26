@@ -1,4 +1,4 @@
-// quiz.js - نسخة اختبار + مسابقة واحدة (10 أسئلة) - جائزة 200,000 كوينز
+// quiz.js - نسخة ثابتة تدعم كل الأجهزة (بما فيها الموبايل)
 
 ///// العناصر /////
 const startBtn = document.getElementById("start-btn");
@@ -12,7 +12,7 @@ const testBtn = document.getElementById("test-btn");
 const msgBox = document.getElementById("msg-box");
 
 ///// إعدادات المسابقة /////
-const PLAYED_KEY = "fifa_arab_played_single_v2";
+const PLAYED_KEY = "fifa_arab_played_single_v3";
 const PRIZE_AMOUNT = 200000;
 const CODE_PREFIX = "FA-";
 
@@ -22,14 +22,13 @@ let currentQuestion = 0;
 let score = 0;
 let timeLeft = 15;
 let timerInterval = null;
-let isTestMode = false; // وضع التجربة
+let isTestMode = false;
 
-///// دوال مساعدة /////
-function showMsg(text, type = "error") {
+///// دوال المساعدة /////
+function showMsg(text) {
   msgBox.textContent = text;
-  msgBox.className = type === "success" ? "success" : "error";
-  msgBox.style.display = "block";
-  setTimeout(() => (msgBox.style.display = "none"), 4000);
+  msgBox.classList.add("show");
+  setTimeout(() => msgBox.classList.remove("show"), 3000);
 }
 
 function shuffleArray(arr) {
@@ -40,22 +39,16 @@ function generateWinnerCode() {
   return CODE_PREFIX + Math.floor(10000 + Math.random() * 90000);
 }
 
-///// تحميل الأسئلة من ملف JSON /////
+///// تحميل الأسئلة /////
 async function loadQuestions() {
   try {
     const res = await fetch("questions.json");
-    if (!res.ok) throw new Error("فشل تحميل ملف الأسئلة");
     const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) {
-      showMsg("حدث خطأ أثناء تحميل الأسئلة، حاول لاحقًا.", "error");
-      return false;
-    }
     questions = shuffleArray(data).slice(0, 10);
     questions.forEach(q => q.options = shuffleArray(q.options));
     return true;
-  } catch (err) {
-    console.error(err);
-    showMsg("حدث خطأ أثناء تحميل الأسئلة، حاول لاحقًا.", "error");
+  } catch {
+    showMsg("حدث خطأ أثناء تحميل الأسئلة.");
     return false;
   }
 }
@@ -65,7 +58,6 @@ function showQuestion() {
   const q = questions[currentQuestion];
   questionContainer.textContent = `${currentQuestion + 1}. ${q.question}`;
   answersContainer.innerHTML = "";
-
   q.options.forEach(opt => {
     const btn = document.createElement("button");
     btn.className = "answer-btn";
@@ -73,7 +65,6 @@ function showQuestion() {
     btn.onclick = () => selectAnswer(btn, q.answer);
     answersContainer.appendChild(btn);
   });
-
   resetTimer();
   startTimer();
 }
@@ -84,9 +75,9 @@ function selectAnswer(btn, correct) {
   if (btn.textContent === correct) score++;
   if (currentQuestion < questions.length - 1) {
     currentQuestion++;
-    setTimeout(showQuestion, 300);
+    setTimeout(showQuestion, 400);
   } else {
-    setTimeout(finishQuiz, 300);
+    setTimeout(finishQuiz, 400);
   }
 }
 
@@ -94,7 +85,6 @@ function selectAnswer(btn, correct) {
 function startTimer() {
   timeLeft = 15;
   timerElement.textContent = timeLeft;
-  clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeLeft--;
     timerElement.textContent = timeLeft;
@@ -107,11 +97,10 @@ function startTimer() {
 
 function resetTimer() {
   clearInterval(timerInterval);
-  timeLeft = 15;
-  timerElement.textContent = timeLeft;
+  timerElement.textContent = "15";
 }
 
-///// نهاية المسابقة /////
+///// إنهاء المسابقة /////
 function finishQuiz() {
   clearInterval(timerInterval);
   quizBox.classList.add("hidden");
@@ -127,8 +116,7 @@ function finishQuiz() {
       <p>الجائزة: ${PRIZE_AMOUNT.toLocaleString('en-US')} كوينز</p>
       <p>كود الفوز الخاص بك:</p>
       <div style="color:#FFD700;font-size:20px;font-weight:bold;margin-top:5px">${code}</div>
-      <p>1️⃣ احتفظ بالكود لتسليم جائزتك (سكرين شوت)</p>
-      <p>2️⃣ تابع حسابات المتجر على تويتر وانستجرام وقناة الواتساب.</p>
+      <p>احتفظ بالكود لتسليم جائزتك (سكرين شوت)</p>
       <a href="https://fifa-arab.com" target="_blank" class="store-btn">🏪 الدخول للمتجر</a>
     `;
   } else {
@@ -144,37 +132,35 @@ function finishQuiz() {
   }
 
   isTestMode = false;
-  testBtn.hidden = false; // بعد النتيجة، لما يرجع المستخدم للصفحة، الزر يظهر تاني
 }
 
-///// بدء المسابقة /////
+///// البدء /////
 startBtn.addEventListener("click", async () => {
   if (!isTestMode && localStorage.getItem(PLAYED_KEY)) {
-    showMsg("لقد شاركت بالفعل في المسابقة! لا يمكنك اللعب مرة ثانية.", "error");
+    showMsg("لقد شاركت بالفعل في المسابقة! لا يمكنك اللعب مرة ثانية.");
     return;
   }
 
   const loaded = await loadQuestions();
   if (!loaded) return;
 
-  currentQuestion = 0;
-  score = 0;
+  localStorage.setItem("quizStarted", "true");
   startBox.classList.add("hidden");
-  resultBox.classList.add("hidden");
   quizBox.classList.remove("hidden");
-  testBtn.hidden = true; // إخفاء زر التجربة أثناء المسابقة
-
   showQuestion();
 });
 
 ///// زر التجربة /////
 testBtn.addEventListener("click", () => {
   isTestMode = true;
-  showMsg("تم فتح وضع التجربة، يمكنك الآن الضغط على 'ابدأ التحدي' لتجربة المسابقة.", "success");
+  showMsg("تم فتح وضع التجربة، اضغط على 'ابدأ التحدي' لتجربة المسابقة.");
 });
 
-///// عند تحميل الصفحة /////
-document.addEventListener("DOMContentLoaded", () => {
-  resultBox.classList.add("hidden");
-  testBtn.hidden = false; // يظهر فقط في الصفحة الرئيسية
+///// منع الدخول بعد التحديث /////
+window.addEventListener("load", () => {
+  if (localStorage.getItem(PLAYED_KEY) && !isTestMode) {
+    startBtn.disabled = true;
+    testBtn.disabled = true;
+    showMsg("لقد شاركت بالفعل في المسابقة 🔒");
+  }
 });

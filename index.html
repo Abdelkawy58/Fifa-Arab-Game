@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>مسابقة فيفا عرب </title>
+  <title>مسابقة فيفا عرب</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="./logo.png">
 </head>
@@ -15,6 +15,9 @@
       <h1>مسابقة متجر فيفا عرب ⚽️</h1>
     </header>
 
+    <!-- صندوق الرسائل -->
+    <div id="msg-box" class="msg-box"></div>
+
     <!-- المسابقة -->
     <div id="quiz-box" class="hidden">
       <div id="question-container"></div>
@@ -24,29 +27,18 @@
 
     <!-- بداية المسابقة -->
     <div id="start-box">
-      <!-- هنا صندوق الرسائل يظهر بدل الـ alert -->
-      <div id="msg-box" class="hidden"></div>
-
       <div id="intro-text" class="intro-text">
-        <p> عندك 15 ثانية لكل سؤال 🕒</p>
-        <p> استعد قبل البدء لك محاوله واحده فقط</p>
-        <p>الجائزة : 200 ألف كوينز 💰</p>
+        <p>عندك 15 ثانية لكل سؤال 🕒</p>
+        <p>استعد قبل البدء، لك محاولة واحدة فقط</p>
+        <p>الجائزة: 200 ألف كوينز 💰</p>
       </div>
 
-      <p class="info">
-        استعد وبيّن مدى معرفتك بعالم كرة القدم 💪
-      </p>
-      <p class="info">
-        الذي يجيب عن الأسئلة العشر جميعها هو بطل التحدّي الحقيقي 🏅
-      </p>
-      <button id="start-btn">ابدأ التحدي 🔥</button>
-    </div>
+      <p class="info">استعد وبيّن مدى معرفتك بعالم كرة القدم 💪</p>
+      <p class="info">الذي يجيب عن جميع الأسئلة العشر هو بطل التحدّي الحقيقي 🏅</p>
 
-    <!-- زر تجربة المسابقة -->
-    <!-- مخفي افتراضياً، تقدر تتحكم في ظهوره من styles.css -->
-    <button id="test-btn" class="test-btn" hidden>
-      تجربة المسابقة
-    </button>
+      <button id="start-btn">ابدأ التحدي 🔥</button>
+      <button id="test-btn" class="test-btn">تجربة المسابقة</button>
+    </div>
 
     <div id="result-box" class="hidden"></div>
 
@@ -55,7 +47,7 @@
       <div class="social-links">
         <a href="https://twitter.com/FifaArab00" target="_blank">🐦 تويتر</a> |
         <a href="https://instagram.com/fifaarab00" target="_blank">📸 انستجرام</a> |
-        <a href="https://whatsapp.com/channel/0029VbBKoP6Bfxo962WYhj2I" target="_blank">📱 قناه الواتساب</a>
+        <a href="https://whatsapp.com/channel/0029VbBKoP6Bfxo962WYhj2I" target="_blank">📱 قناة الواتساب</a>
         <p>© فيفا عرب</p>
       </div>
     </footer>
