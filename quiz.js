@@ -1,6 +1,6 @@
 // quiz.js - نسخة نهائية مستقرة تدعم كل الأجهزة (بما فيها الموبايل)
 
-///// العناصر /////
+// العناصر
 const startBtn = document.getElementById("start-btn");
 const quizBox = document.getElementById("quiz-box");
 const questionContainer = document.getElementById("question-container");
@@ -11,13 +11,13 @@ const startBox = document.getElementById("start-box");
 const testBtn = document.getElementById("test-btn");
 const msgBox = document.getElementById("msg-box");
 
-///// إعدادات المسابقة /////
-const PLAYED_KEY = "fifa_arab_played_single_v4";
-const STARTED_KEY = "fifa_arab_started_v4";
+// إعدادات المسابقة
+const PLAYED_KEY = "fifa_arab_played_single_v5";
+const STARTED_KEY = "fifa_arab_started_v5";
 const PRIZE_AMOUNT = 200000;
 const CODE_PREFIX = "FA-";
 
-///// حالة اللعبة /////
+// حالة اللعبة
 let questions = [];
 let currentQuestion = 0;
 let score = 0;
@@ -25,7 +25,7 @@ let timeLeft = 15;
 let timerInterval = null;
 let isTestMode = false;
 
-///// دوال المساعدة /////
+// دوال المساعدة
 function showMsg(text) {
   msgBox.textContent = text;
   msgBox.classList.add("show");
@@ -43,7 +43,7 @@ function generateWinnerCode() {
   return CODE_PREFIX + Math.floor(10000 + Math.random() * 90000);
 }
 
-///// تحميل الأسئلة /////
+// تحميل الأسئلة
 async function loadQuestions() {
   try {
     const res = await fetch("questions.json");
@@ -58,7 +58,7 @@ async function loadQuestions() {
   }
 }
 
-///// عرض السؤال /////
+// عرض السؤال
 function showQuestion() {
   const q = questions[currentQuestion];
   questionContainer.textContent = `${currentQuestion + 1}. ${q.question}`;
@@ -76,7 +76,7 @@ function showQuestion() {
   startTimer();
 }
 
-///// اختيار الإجابة /////
+// اختيار الإجابة
 function selectAnswer(btn, correct) {
   clearInterval(timerInterval);
   if (btn.textContent === correct) score++;
@@ -88,7 +88,7 @@ function selectAnswer(btn, correct) {
   }
 }
 
-///// المؤقت /////
+// المؤقت
 function startTimer() {
   timeLeft = 15;
   timerElement.textContent = timeLeft;
@@ -108,7 +108,7 @@ function resetTimer() {
   timerElement.textContent = "15";
 }
 
-///// إنهاء المسابقة /////
+// إنهاء المسابقة
 function finishQuiz() {
   clearInterval(timerInterval);
   quizBox.classList.add("hidden");
@@ -146,7 +146,7 @@ function finishQuiz() {
   isTestMode = false;
 }
 
-///// بدء المسابقة /////
+// بدء المسابقة
 startBtn.addEventListener("click", async () => {
   // منع اللعب إذا سبق وشارك المستخدم
   if (!isTestMode && localStorage.getItem(PLAYED_KEY)) {
@@ -174,13 +174,13 @@ startBtn.addEventListener("click", async () => {
   showQuestion();
 });
 
-///// زر التجربة /////
+// زر التجربة
 testBtn.addEventListener("click", () => {
   isTestMode = true;
   showMsg("تم تفعيل وضع التجربة. يمكنك الضغط على 'ابدأ التحدي' لتجربة اللعبة.");
 });
 
-///// عند تحميل الصفحة /////
+// عند تحميل الصفحة
 window.addEventListener("load", () => {
   // لو المستخدم خلص أو بدأ فعلاً يمنع فقط وضع اللعب العادي
   if (localStorage.getItem(PLAYED_KEY) || localStorage.getItem(STARTED_KEY)) {
