@@ -13,6 +13,7 @@ const msgBox = document.getElementById("msg-box");
 
 ///// إعدادات المسابقة /////
 const PLAYED_KEY = "fifa_arab_played_single_v3";
+const STARTED_KEY = "fifa_arab_started_v3";
 const PRIZE_AMOUNT = 200000;
 const CODE_PREFIX = "FA-";
 
@@ -131,37 +132,38 @@ function finishQuiz() {
     localStorage.setItem(PLAYED_KEY, "1");
   }
 
+  // بعد انتهاء اللعبة نحذف مفتاح البداية
+  localStorage.removeItem(STARTED_KEY);
+
   isTestMode = false;
 }
 
-///// البدء /////
+///// بدء التحدي /////
 startBtn.addEventListener("click", async () => {
-  // 🔹 أولاً تحقق لو المستخدم لعب فعلاً قبل كده (في الوضع العادي فقط)
+  // لو لعب قبل كده ممنوع
   if (!isTestMode && localStorage.getItem(PLAYED_KEY)) {
-    showMsg("لقد شاركت بالفعل في المسابقة! لا يمكنك اللعب مرة ثانية.", "error");
+    showMsg("لقد شاركت بالفعل في المسابقة! لا يمكنك اللعب مرة ثانية.");
+    return;
+  }
+
+  // لو بدأ اللعبة قبل كده ولسه في النص (عمل ريفريش)
+  if (!isTestMode && localStorage.getItem(STARTED_KEY)) {
+    showMsg("لقد بدأت المسابقة مسبقًا ولا يمكنك إعادة المحاولة.");
     return;
   }
 
   const loaded = await loadQuestions();
   if (!loaded) return;
 
-  currentQuestion = 0;
-  score = 0;
-
-  startBox.classList.add("hidden");
-  resultBox.classList.add("hidden");
-  quizBox.classList.remove("hidden");
-  testBtn.hidden = true; // إخفاء زر التجربة أثناء المسابقة
-
-  // ✅ هنا فقط نسجل إن المستخدم بدأ التحدي فعلاً (بعد تحميل الأسئلة وبدء اللعبة)
+  // بمجرد ما يبدأ التحدي نحفظ أنه بدأ فعلاً
   if (!isTestMode) {
-    localStorage.setItem(PLAYED_KEY, "1");
+    localStorage.setItem(STARTED_KEY, "1");
   }
 
+  startBox.classList.add("hidden");
+  quizBox.classList.remove("hidden");
   showQuestion();
 });
-
-
 
 ///// زر التجربة /////
 testBtn.addEventListener("click", () => {
@@ -169,11 +171,14 @@ testBtn.addEventListener("click", () => {
   showMsg("تم فتح وضع التجربة، اضغط على 'ابدأ التحدي' لتجربة المسابقة.");
 });
 
-///// منع الدخول بعد التحديث /////
+///// عند تحميل الصفحة /////
 window.addEventListener("load", () => {
-  if (localStorage.getItem(PLAYED_KEY) && !isTestMode) {
-    startBtn.disabled = true;
-    testBtn.disabled = true;
-    showMsg("لقد شاركت بالفعل في المسابقة 🔒");
+  // لو المسابقة خلصت أو اتبدأت بالفعل → يمنع الدخول
+  if (localStorage.getItem(PLAYED_KEY) || localStorage.getItem(STARTED_KEY)) {
+    if (!isTestMode) {
+      startBtn.disabled = true;
+      testBtn.disabled = false;
+      showMsg("لقد شاركت بالفعل في المسابقة 🔒");
+    }
   }
 });
