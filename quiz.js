@@ -50,7 +50,7 @@ async function loadQuestions() {
       showMsg("حدث خطأ أثناء تحميل الأسئلة، حاول لاحقًا.", "error");
       return false;
     }
-    questions = shuffleArray(data).slice(0, 10); // نختار 10 عشوائية
+    questions = shuffleArray(data).slice(0, 10);
     questions.forEach(q => q.options = shuffleArray(q.options));
     return true;
   } catch (err) {
@@ -167,21 +167,16 @@ startBtn.addEventListener("click", async () => {
 });
 
 ///// زر التجربة /////
-testBtn.addEventListener("click", async () => {
+// تعديل هنا فقط:
+testBtn.addEventListener("click", () => {
   isTestMode = true;
-  const loaded = await loadQuestions();
-  if (!loaded) return;
-
-  currentQuestion = 0;
-  score = 0;
-  startBox.classList.add("hidden");
-  resultBox.classList.add("hidden");
-  quizBox.classList.remove("hidden");
-
-  showQuestion();
+  showMsg("تم فتح وضع التجربة، يمكنك الآن الضغط على 'ابدأ التحدي' لتجربة المسابقة.", "success");
 });
 
-// تهيئة الصفحة
+// منع إعادة اللعب بعد التحديث
 document.addEventListener("DOMContentLoaded", () => {
+  if (localStorage.getItem(PLAYED_KEY)) {
+    console.log("المستخدم أنهى المسابقة مسبقًا");
+  }
   resultBox.classList.add("hidden");
 });
